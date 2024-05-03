@@ -10,7 +10,7 @@ class Kernel extends ConsoleKernel
 
     protected $commands = [
 
-Commands\TestMail::class,
+        Commands\TestMail::class,
 
     ];
 
@@ -19,7 +19,7 @@ Commands\TestMail::class,
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('Test:Mail')->everyMinute();
+        $schedule->command('Test:Mail')->dailyAt('12:00');
     }
 
     /**
@@ -27,7 +27,7 @@ Commands\TestMail::class,
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
