@@ -5,25 +5,34 @@ namespace App\Http\Controllers;
 use App\Models\PostModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 
 class PostController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $userId = Auth::id();
 
-        $posts = PostModel::where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
+    public function welcome()
+    {
+        $posts = PostModel::with('user')
+        ->orderBy('created_at', 'desc')
             ->get();
 
+          // Get the error message from the session, if any
+          $errorMessage = Session::get('error');
+
+          return view('welcome', ['posts' => $posts, 'errorMessage' => $errorMessage]);
+    }
+
+    public function index()
+    {
+        $posts = PostModel::with('user') // Eager load the 'user' relationship
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+    
         return view('posts', ['posts' => $posts]);
-        // foreach ($posts as $post) {
-        //     dd($post->images);
-        // }
     }
 
     /**
@@ -83,9 +92,20 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        $post = PostModel::findOrFail($id);
+        $userId = Auth::id();
 
-        return view('editPost', compact('post'));
+        $post = PostModel::where('id', $id)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+            if (!$post) {
+                Session::flash('error', 'You cannot delete posts that do not belong to you');
+                return redirect()->route('welcome')->with(['error' => 'You cannot delete posts that do not belong to you']);
+            }else{
+                return view('editPost', compact('post'));
+            }
+
+       
     }
 
     /**
@@ -102,11 +122,16 @@ class PostController extends Controller
             'images.*' => 'nullable|mimes:jpeg,jpg,png|max:50000',
         ]);
 
-        $post = PostModel::find($id);
+        $userId = Auth::id();
 
-        if (!$post) {
-            return redirect()->back()->withErrors(['error' => 'Post not found!']);
-        }
+        $post = PostModel::where('id', $id)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+            if (!$post) {
+                Session::flash('error', 'You cannot delete posts that do not belong to you');
+                return redirect()->route('welcome')->with(['error' => 'You cannot delete posts that do not belong to you']);
+            }
 
         // Update the post fields except for images
         $post->update([
@@ -137,7 +162,16 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        $post = PostModel::findOrFail($id);
+        $userId = Auth::id();
+
+        $post = PostModel::where('id', $id)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+            if (!$post) {
+                Session::flash('error', 'You cannot delete posts that do not belong to you');
+                return redirect()->route('welcome')->with(['error' => 'You cannot delete posts that do not belong to you']);
+            }
 
         $imageFilenames = explode(',', $post->images);
 

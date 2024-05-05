@@ -109,10 +109,12 @@
                                                 @php
                                                     $images = explode(',', $post->images);
                                                 @endphp
-                                                @foreach ($images as $image)
-                                                    <img src="{{ asset('postImages/' . $image) }}" alt="Post Image"
-                                                        class="w-24 h-auto object-cover">
-                                                @endforeach
+                                          <div class="flex flex-wrap">
+                                            @foreach ($images as $image)
+                                                <img src="{{ asset('postImages/' . $image) }}" alt="Post Image"
+                                                    class="border rounded-full m-2" width="100" height="100">
+                                            @endforeach
+                                        </div>
                                             </td>
                                             <td class="border px-4 py-2 text-white">
                                                 <a href="{{ route('posts.show', $post->id) }}"
